@@ -9,6 +9,7 @@ using TootTally.Graphics;
 using TootTally.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace TootTally.KeyOverlay
 {
@@ -61,8 +62,9 @@ namespace TootTally.KeyOverlay
 
         public static class KeyOverlay
         {
-            private static List<KeyCode> _keyPressedList;
+            private static Dictionary<KeyCode, SingleKey> _keyPressedDict;
             private static CustomButton _keyPrefab;
+            private static GameObject _uiCanvas;
 
             [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
             [HarmonyPostfix]
@@ -72,6 +74,7 @@ namespace TootTally.KeyOverlay
                 var tempObj = GameObjectFactory.CreateCustomButton(__instance.bgshape.transform, Vector2.zero, new Vector2(50, 50), "test", "tempObj"); //idk where to put the tempObj just put it somewhere random lmfao
                 _keyPrefab = GameObject.Instantiate(tempObj);
                 _keyPrefab.gameObject.name = "KeyOverlayPrefab";
+                _keyPrefab.GetComponent<RectTransform>().sizeDelta = Vector2.one * 20;
                 GameObject.DestroyImmediate(tempObj.gameObject);
                 GameObject.DontDestroyOnLoad(_keyPrefab);
                 //_keyPrefab.button.onClick = new Button.ButtonClickedEvent();
@@ -82,7 +85,32 @@ namespace TootTally.KeyOverlay
             [HarmonyPostfix]
             public static void OnGameControllerStartSetupOverlay(GameController __instance)
             {
+                _uiCanvas = GameObject.Find("GameplayCanvas/UIHolder");
+                _keyPressedDict = new Dictionary<KeyCode, SingleKey>();
             }
+
+            [HarmonyPatch(typeof(GameController), nameof(GameController.Update))]
+            [HarmonyPostfix]
+            public static void OnUpdateDetectKeyPressed(GameController __instance, List<KeyCode> ___toot_keys)
+            {
+                ___toot_keys.ForEach(key =>
+                {
+                    if (Input.GetKey(key))
+                    {
+                        if (!_keyPressedDict.ContainsKey(key))
+                        {
+                            _keyPressedDict.Add(key, new SingleKey(GameObjectFactory.CreateCustomButton(_uiCanvas.transform, new Vector2(0, -22 * _keyPressedDict.Count - 50), new Vector2(20, 20), key.ToString(), $"KeyOverlay{key}")));
+                            _keyPressedDict[key].OnKeyPress();
+                            TootTallyLogger.LogInfo(Instance.GetLogger, $"New key pressed, adding {key} to overlay.");
+                        }
+                        else if (!_keyPressedDict[key].isPressed)
+                            _keyPressedDict[key].OnKeyPress();
+                    }
+                    else if (_keyPressedDict.ContainsKey(key) && _keyPressedDict[key].isPressed)
+                        _keyPressedDict[key].OnKeyRelease();
+                });
+            }
+
 
         }
 

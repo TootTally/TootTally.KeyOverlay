@@ -16,7 +16,6 @@
 		<PackageReference Include="BepInEx.Core" Version="5.*" />
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
 		<PackageReference Include="UnityEngine.Modules" Version="2019.3.11" IncludeAssets="compile" />
-		<PackageReference Include="TromboneChamp.GameLibs" Version="*" />
 		<PackageReference Include="TromboneChamp.BaboonAPI" Version="*" />
 		<PackageReference Include="TromboneChamp.TrombLoader" Version="*" />
 	</ItemGroup>
@@ -28,6 +27,9 @@
 	<ItemGroup>
 		<Reference Include="TootTally">
 			<HintPath>$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTally\TootTally.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp-nstrip">
+			<HintPath>$(TromboneChampDir)\TromboneChamp_Data\Managed\Assembly-CSharp-nstrip.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
