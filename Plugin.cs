@@ -1,11 +1,16 @@
 ﻿using BaboonAPI.Hooks.Initializer;
 using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
+using System.Collections.Generic;
 using System.IO;
+using TootTally.Graphics;
 using TootTally.Utils;
+using UnityEngine;
+using UnityEngine.UI;
 
-namespace TootTally.ModuleTemplate
+namespace TootTally.KeyOverlay
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("TootTally", BepInDependency.DependencyFlags.HardDependency)]
@@ -13,12 +18,15 @@ namespace TootTally.ModuleTemplate
     {
         public static Plugin Instance;
 
-        private const string CONFIG_NAME = "ModuleTemplate.cfg";
-        private const string CONFIG_FIELD = "ModuleTemplate";
+        private const string CONFIG_NAME = "KeyOverlay.cfg";
+        private const string CONFIG_FIELD = "KeyOverlay";
         public Options option;
         public ConfigEntry<bool> ModuleConfigEnabled { get; set; }
         public bool IsConfigInitialized { get; set; }
         public string Name { get => PluginInfo.PLUGIN_NAME; set => Name = value; }
+
+        public ManualLogSource GetLogger { get => Logger; }
+
         public void LogInfo(string msg) => Logger.LogInfo(msg);
         public void LogError(string msg) => Logger.LogError(msg);
 
@@ -26,14 +34,14 @@ namespace TootTally.ModuleTemplate
         {
             if (Instance != null) return;
             Instance = this;
-            
+
             GameInitializationEvent.Register(Info, TryInitialize);
         }
 
         private void TryInitialize()
         {
             // Bind to the TTModules Config for TootTally
-            ModuleConfigEnabled = TootTally.Plugin.Instance.Config.Bind("Modules", "ModuleTemplate", true, "<insert module description here>");
+            ModuleConfigEnabled = TootTally.Plugin.Instance.Config.Bind("Modules", "KeyOverlay", true, "Displays Key Pressed During A Song");
             // Attempt to add this module to the TTModules page in TrombSettings
             if (TootTally.Plugin.Instance.moduleSettings != null) OptionalTrombSettings.Add(TootTally.Plugin.Instance.moduleSettings, ModuleConfigEnabled);
             TootTally.Plugin.AddModule(this);
@@ -41,23 +49,7 @@ namespace TootTally.ModuleTemplate
 
         public void LoadModule()
         {
-            string configPath = Path.Combine(Paths.BepInExRootPath, "config/");
-            ConfigFile config = new ConfigFile(configPath + CONFIG_NAME, true);
-            option = new Options()
-            {
-                // Set your config here by binding them to the related ConfigEntry in your Options class
-                // Example:
-                // Unlimited = config.Bind(CONFIG_FIELD, "Unlimited", DEFAULT_UNLISETTING)
-            };
-
-            var settingsPage = OptionalTrombSettings.GetConfigPage("ModuleTemplate");
-            if (settingsPage != null) {
-                // Use OptionalTrombSettings to add your config to TrombSettings
-                // Example:
-                // OptionalTrombSettings.Add(settingsPage, option.Unlimited);
-            }
-
-            Harmony.CreateAndPatchAll(typeof(ModuleTemplatePatches), PluginInfo.PLUGIN_GUID);
+            Harmony.CreateAndPatchAll(typeof(KeyOverlay), PluginInfo.PLUGIN_GUID);
             LogInfo($"Module loaded!");
         }
 
@@ -67,16 +59,32 @@ namespace TootTally.ModuleTemplate
             LogInfo($"Module unloaded!");
         }
 
-        public static class ModuleTemplatePatches
+        public static class KeyOverlay
         {
-            // Apply your Trombone Champ patches here
+            private static List<KeyCode> _keyPressedList;
+            private static CustomButton _keyPrefab;
+
+            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
+            [HarmonyPostfix]
+            public static void SetKeyOverlayPrefab(LevelSelectController __instance)
+            {
+                if (_keyPrefab != null) return;
+                var tempObj = GameObjectFactory.CreateCustomButton(__instance.bgshape.transform, Vector2.zero, new Vector2(50, 50), "test", "tempObj"); //idk where to put the tempObj just put it somewhere random lmfao
+                _keyPrefab = GameObject.Instantiate(tempObj);
+                _keyPrefab.gameObject.name = "KeyOverlayPrefab";
+                GameObject.DestroyImmediate(tempObj.gameObject);
+                GameObject.DontDestroyOnLoad(_keyPrefab);
+                //_keyPrefab.button.onClick = new Button.ButtonClickedEvent();
+            }
+
+
+            [HarmonyPatch(typeof(GameController), nameof(GameController.Start))]
+            [HarmonyPostfix]
+            public static void OnGameControllerStartSetupOverlay(GameController __instance)
+            {
+            }
+
         }
 
-        public class Options
-        {
-            // Fill this class up with ConfigEntry objects that define your configs
-            // Example:
-            // public ConfigEntry<bool> Unlimited { get; set; }
-        }
     }
 }
