@@ -89,6 +89,8 @@ namespace TootTally.KeyOverlay
             [HarmonyPostfix]
             public static void OnGameControllerStartSetupOverlay(GameController __instance)
             {
+                if (__instance.freeplay) return;
+                
                 var uiCanvas = GameObject.Find("GameplayCanvas/UIHolder");
 
                 _keyOverlayUI = GameObject.Instantiate(_keyPrefab, uiCanvas.transform).gameObject;
@@ -110,6 +112,7 @@ namespace TootTally.KeyOverlay
             [HarmonyPostfix]
             public static void OnUpdateDetectKeyPressed(GameController __instance, List<KeyCode> ___toot_keys)
             {
+                if (__instance.freeplay) return;
                 ___toot_keys.ForEach(key =>
                 {
                     if (Input.GetKey(key))
