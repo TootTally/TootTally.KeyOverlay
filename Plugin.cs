@@ -43,8 +43,6 @@ namespace TootTally.KeyOverlay
         {
             // Bind to the TTModules Config for TootTally
             ModuleConfigEnabled = TootTally.Plugin.Instance.Config.Bind("Modules", "KeyOverlay", true, "Displays Key Pressed During A Song");
-            // Attempt to add this module to the TTModules page in TrombSettings
-            if (TootTally.Plugin.Instance.moduleSettings != null) OptionalTrombSettings.Add(TootTally.Plugin.Instance.moduleSettings, ModuleConfigEnabled);
             TootTally.Plugin.AddModule(this);
         }
 
