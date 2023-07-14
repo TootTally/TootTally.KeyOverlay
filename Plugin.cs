@@ -125,7 +125,7 @@ namespace TootTally.KeyOverlay
                                 newKeyGameObject.name = $"KeyOverlay{key}";
                                 _keyPressedDict.Add(key, new SingleKey(newKeyGameObject));
                                 _keyPressedDict[key].OnKeyPress();
-                                TootTallyLogger.LogInfo(Instance.GetLogger, $"New key pressed, adding {key} to overlay.");
+                                Plugin.Instance.LogInfo($"New key pressed, adding {key} to overlay.");
                             }
                         }
                         else if (!_keyPressedDict[key].isPressed)
