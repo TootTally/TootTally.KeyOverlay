@@ -110,7 +110,7 @@ namespace TootTally.KeyOverlay
             [HarmonyPostfix]
             public static void OnUpdateDetectKeyPressed(GameController __instance, List<KeyCode> ___toot_keys)
             {
-                if (__instance.freeplay) return;
+                if (__instance.freeplay || _keyPressedDict == null) return;
                 ___toot_keys.ForEach(key =>
                 {
                     if (Input.GetKey(key))
